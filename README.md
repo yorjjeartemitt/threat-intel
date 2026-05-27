@@ -43,4 +43,4 @@ API_KEY=your_key #without " "
 
 ## How to get API
 
-Register at [here](https://www.abuseipdb.com/) and generate your key [here](https://www.abuseipdb.com/account/api/keys)
+Register [here](https://www.abuseipdb.com/) and generate your key [here](https://www.abuseipdb.com/account/api/keys)
