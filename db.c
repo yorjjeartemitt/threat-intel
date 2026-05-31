@@ -3,7 +3,7 @@
 #include "db.h"
 void db_init(){
 	sqlite3 *db;
-	int rc=sqlite3_open("threats.db",&db);
+	int rc=sqlite3_open("../threats.db",&db);
 	if (rc!=SQLITE_OK){
 		fprintf(stderr,"db open error:%s\n",sqlite3_errmsg(db));
 		return;
