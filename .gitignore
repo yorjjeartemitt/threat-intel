@@ -1,0 +1,6 @@
+.env
+threats.db
+build/
+data/
+*.o
+*.out
