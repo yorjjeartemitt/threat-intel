@@ -8,6 +8,7 @@ case "$1" in
         sqlite3 threats.db "SELECT * FROM reports;"
         ;;
     docker)
+		touch threats.db
         docker run \
             -e WAYLAND_DISPLAY="$WAYLAND_DISPLAY" \
             -e XDG_RUNTIME_DIR=/tmp \
