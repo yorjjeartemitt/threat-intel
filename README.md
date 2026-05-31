@@ -43,7 +43,7 @@ sudo apt install libgtk-3-dev libcurl4-openssl-dev libcjson-dev libsqlite3-dev c
 ```sh
 git clone https://github.com/yorjjeartemitt/threat-intel.git
 cd threat-intel
-cp .env.example .env   # add your API key from [here](https://www.abuseipdb.com)
+cp .env.example .env   # add your API key
 mkdir -p build
 ./run gcc     # build with gcc and run
 ./run cmake   # build with cmake and run
