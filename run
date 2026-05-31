@@ -1,0 +1,24 @@
+#!/bin/sh
+case "$1" in
+    sql)
+        sqlite3 threats.db "SELECT * FROM reports;"
+        ;;
+    docker)
+        docker run \
+            -e WAYLAND_DISPLAY="$WAYLAND_DISPLAY" \
+            -e XDG_RUNTIME_DIR=/tmp \
+            --env-file .env \
+            -v "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY:/tmp/$WAYLAND_DISPLAY" \
+            -v "$(pwd)/threats.db:/app/threats.db" \
+            threat-intel /app/threat-intel
+        ;;    
+    gcc)
+        gcc main.c api.c db.c -o threat-intel \
+            $(pkg-config --cflags --libs gtk+-3.0) \
+            -lcurl -lcjson -lsqlite3 && env $(cat .env) ./threat-intel 
+        ;;
+    *)
+        echo "Usage: run {sql|docker|gcc}"
+        exit 1
+        ;;
+esac
