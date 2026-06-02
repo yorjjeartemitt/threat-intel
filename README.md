@@ -7,6 +7,10 @@ GUI app for checking IP reputation via AbuseIPDB API. Results are saved locally 
 ### GUI
 ![gui](Pictures/gui.png)
 
+### DECODE/ENCODE
+
+![decode_encode](Pictures/decode_encode.png)
+
 ### SQL
 ![sql](Pictures/sql.png)
 
