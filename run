@@ -5,7 +5,7 @@ set +a
 
 case "$1" in
     sql)
-        sqlite3 threats.db "SELECT * FROM reports;"
+        sqlite3 threats.db "SELECT * FROM reports ORDER BY score DESC;"
         ;;
     docker)
 		touch threats.db

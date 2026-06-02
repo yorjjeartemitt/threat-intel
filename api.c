@@ -41,6 +41,10 @@ char *check_ip(const char *ip){
 		    return NULL;
 		}
 		cJSON *json = cJSON_Parse(chunk.data);
+		if (json==NULL){
+			free(chunk.data);
+			return NULL;
+		}
 		cJSON *data = cJSON_GetObjectItem(json, "data");
 		cJSON *score = cJSON_GetObjectItem(data, "abuseConfidenceScore");
 		cJSON *country = cJSON_GetObjectItem(data, "countryCode");
