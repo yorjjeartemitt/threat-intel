@@ -29,6 +29,24 @@ static void set_white(GtkMenuItem *item,gpointer data){
 	g_object_set(settings,"gtk-application-prefer-dark-theme",FALSE,NULL);
 	db_save_setting("theme","white");
 }
+static void load_env(){
+	FILE *f=fopen(".env","r");
+	if (!f){
+		return;
+	}
+	char line[256];
+	while (fgets(line,sizeof(line),f)){
+		char *eq=strchr(line,'=');
+		if (!eq){
+			continue;
+		}
+		*eq=0;
+		char *val=eq+1;
+		val[strcspn(val,"\n")]=0;
+		setenv(line,val,0);
+	}
+	fclose(f);
+}
 static void check_clicked(GtkButton *btn,gpointer data){
 	AppWidgets *app_w=(AppWidgets *)data;
 	const char *text=gtk_entry_get_text(GTK_ENTRY(app_w->entry));
@@ -166,6 +184,7 @@ static void activate(GtkApplication *app,gpointer data){
 	gtk_widget_show_all(window);
 }
 int main(int argc,char **argv){
+	load_env();
 	db_init();
 	AppWidgets widgets={0};
 	
