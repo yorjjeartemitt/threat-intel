@@ -16,8 +16,16 @@ void db_init(){
 	if (rc!=SQLITE_OK){
 		fprintf(stderr,"db create error:%s\n",sqlite3_errmsg(db));
 	}
+	sqlite3_exec(db,
+    "CREATE TABLE IF NOT EXISTS cache("
+    "ip TEXT NOT NULL,"
+    "checker TEXT NOT NULL,"
+    "result TEXT,"
+    "checked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+    "PRIMARY KEY(ip,checker));",
+    NULL,NULL,NULL);
+    sqlite3_exec(db,"CREATE TABLE IF NOT EXISTS checker_state(" "name TEXT PRIMARY KEY, enabled INTEGER);",NULL,NULL,NULL);
 	sqlite3_close(db);
-
 }
 void db_save(const char *ip, int score,const char *country,const char *isp){
 	sqlite3 *db;
@@ -54,6 +62,63 @@ char *db_get_setting(const char *key){
 	char *result=NULL;
 	if (sqlite3_step(stmt)==SQLITE_ROW){
 		result=strdup((const char *)sqlite3_column_text(stmt,0));
+	}
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+	return result;
+}
+void db_cache_save(const char *ip, const char *checker, const char *result){
+    sqlite3 *db;
+    sqlite3_open("threats.db",&db);
+    sqlite3_stmt *stmt;
+    sqlite3_prepare_v2(db,
+        "INSERT OR REPLACE INTO cache(ip,checker,result) VALUES(?,?,?);"
+        ,-1,&stmt,NULL);
+    sqlite3_bind_text(stmt,1,ip,-1,SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt,2,checker,-1,SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt,3,result,-1,SQLITE_TRANSIENT);
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+}
+
+char *db_cache_get(const char *ip, const char *checker){
+	sqlite3 *db;
+	sqlite3_open("threats.db",&db);
+	sqlite3_stmt *stmt;
+	sqlite3_prepare_v2(db,"SELECT result FROM cache WHERE ip=? AND checker=?;",-1,&stmt,NULL);
+	sqlite3_bind_text(stmt,1,ip,-1,SQLITE_STATIC);
+	sqlite3_bind_text(stmt,2,checker,-1,SQLITE_STATIC);
+	char *result=NULL;
+	if (sqlite3_step(stmt)==SQLITE_ROW){	
+		const char *col=(const char *)sqlite3_column_text(stmt,0);
+		if (col) result=strdup(col);
+
+	}
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+	return result;
+}
+void db_save_checker_state(const char *name,int enabled){
+	sqlite3 *db;
+	sqlite3_open("threats.db",&db);
+	sqlite3_stmt *stmt;
+	sqlite3_prepare_v2(db,"INSERT OR REPLACE INTO checker_state(name,enabled) VALUES(?,?);",-1,&stmt,NULL);
+	sqlite3_bind_text(stmt,1,name,-1,SQLITE_TRANSIENT);
+	sqlite3_bind_int(stmt,2,enabled);
+	sqlite3_step(stmt);
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+}
+int db_get_checker_state(const char *name){
+	sqlite3 *db;
+	sqlite3_open("threats.db",&db);
+	sqlite3_stmt *stmt;
+	sqlite3_prepare_v2(db,"SELECT enabled FROM checker_state WHERE name=?;",-1,&stmt,NULL);
+	sqlite3_bind_text(stmt,1,name,-1,SQLITE_TRANSIENT);
+	int result=1;
+	if (sqlite3_step(stmt)==SQLITE_ROW){
+		result=sqlite3_column_int(stmt,0);
 	}
 	sqlite3_finalize(stmt);
 	sqlite3_close(db);

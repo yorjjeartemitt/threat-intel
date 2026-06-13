@@ -1,6 +1,7 @@
 # Threat Intel 
 
-GUI app for checking IP reputation via AbuseIPDB API. Results are saved locally in SQLite.
+GUI	app for checking IP reputation via **7 threat intelligence APIs**.
+Results cached locally in SQLite.
 
 ## Screenshots
 
@@ -27,8 +28,17 @@ GUI app for checking IP reputation via AbuseIPDB API. Results are saved locally 
 ![cJSON](https://img.shields.io/badge/cJSON-555555?style=for-the-badge&logoColor=white)
 ![SQLite3](https://img.shields.io/badge/SQLite3_-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-
+![pthreads](https://img.shields.io/badge/pthreads-555555?style=for-the-badge&logoColor=white)
 </div>
+
+## Features
+
+- IP reputation check via 7 APIs simultaneously (multithreaded)
+- Results cached in SQLite (no duplicate requests)
+- Encode/Decode tool (hex, base64, binary, rot13)
+- Dark/white theme with persistence
+- Per-checker toggle (enable/disable APIs)
+- Docker support
 
 ## Dependencies
 
@@ -57,8 +67,17 @@ mkdir -p build
 
 ---
 
-## API Key
+## API Keys
 
-Register [here](https://www.abuseipdb.com) and get your key [here](https://www.abuseipdb.com/account/api/keys)
+You need to register and get free API keys for each service.
+Add them to your `.env` file (see `.env.example`).
 
-Add to `.env`
+| Service | Register |
+|---|---|
+| AbuseIPDB | [link](https://www.abuseipdb.com) |
+| VirusTotal | [link](https://www.virustotal.com) |
+| Shodan | [link](https://shodan.io) |
+| IPinfo | [link](https://ipinfo.io) |
+| PulseDive | [link](https://pulsedive.com) |
+| AlienVault OTX | [link](https://otx.alienvault.com) |
+| IPQS | [link](https://www.ipqualityscore.com) |
