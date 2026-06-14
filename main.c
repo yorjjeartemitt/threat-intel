@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include <arpa/inet.h>
 #include "api.h"
+#include "threadpool.h"
 #include "db.h"
 
 typedef struct{
@@ -46,7 +47,7 @@ static Checker checkers[] = {
     {"Alien-Vault-OTX",check_alien_vault_otx,NULL,NULL,NULL,TRUE},
     {"IPQS",check_ipqs,NULL,NULL,NULL,TRUE}
 };
-
+static ThreadPool pool;
 static int checker_count = sizeof(checkers)/sizeof(checkers[0]);
 static int valid_ip(const char *ip){
     struct in_addr addr4;
@@ -67,6 +68,9 @@ static GtkWidget* make_menu_item(const char *label,GCallback callback,gpointer d
 	if (callback)
 		g_signal_connect(item,"activate",callback,data);
 	return item;
+}
+static void on_destroy(GtkWidget *w,gpointer data){
+	pool_destroy((ThreadPool *)data);
 }
 static void quits(GtkMenuItem *item,gpointer data){
 	g_application_quit(G_APPLICATION(data));
@@ -91,8 +95,7 @@ static void *checker_thread(void *arg){
 	}
 	LabelUpdate *u=malloc(sizeof(LabelUpdate));
 	u->label=checkers[i].btn;
-	u->text=malloc(256);
-	snprintf(u->text,256,"%s: %s",checkers[i].name,result ? result:"error");
+	asprintf(&u->text,"%s: %s",checkers[i].name,result ? result:"error");
 	free(result);
 	g_idle_add(update_label,u);
 	free((char *)a->ip);
@@ -114,7 +117,6 @@ static void check_clicked(GtkButton *btn,gpointer data){
 		}
 		return;
 	}
-	pthread_t threads[checker_count];
 	for (int i=0;i<checker_count;i++){
 		if (!checkers[i].enabled){
 			gtk_label_set_text(GTK_LABEL(checkers[i].btn),checkers[i].name);
@@ -123,8 +125,7 @@ static void check_clicked(GtkButton *btn,gpointer data){
 		ThreadArg *a=malloc(sizeof(ThreadArg));
 		a->ip=strdup(ip);
 		a->index=i;
-		pthread_create(&threads[i],NULL,checker_thread,a);
-		pthread_detach(threads[i]);
+		pool_submit(&pool,checker_thread,a);
 	}
 }
 static void load_env(){
@@ -294,6 +295,7 @@ static void activate(GtkApplication *app,gpointer data){
 	}
 	EncodeWidgets *ew=malloc(sizeof(EncodeWidgets));
 	g_signal_connect_swapped(window,"destroy",G_CALLBACK(free),ew);
+	g_signal_connect(window,"destroy",G_CALLBACK(on_destroy),&pool);
 	GtkWidget *encode_box=gtk_box_new(GTK_ORIENTATION_VERTICAL,10);
 	GtkWidget *top_row=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,10);
 	GtkWidget *start_encode_btn=gtk_button_new_with_label("start");
@@ -331,6 +333,7 @@ static void activate(GtkApplication *app,gpointer data){
 int main(int argc,char **argv){
 	load_env();
 	db_init();
+	pool_init(&pool);
 	AppWidgets widgets={0};
 	
 	GtkApplication *app=gtk_application_new("com.threatintel",0);
