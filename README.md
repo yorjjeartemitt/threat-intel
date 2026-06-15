@@ -3,6 +3,14 @@
 GUI	app for checking IP reputation via **7 threat intelligence APIs**.
 Results cached locally in SQLite.
 
+# Why I built this
+
+While analyzing network traffic in Wireshark, I kept juggling 
+AbuseIPDB, Shodan, VirusTotal and 4 other tabs simultaneously — 
+manually correlating results for every suspicious IP.
+Built this to consolidate all of them into one lookup. SQLite caching 
+means repeated IPs don't burn through API rate limits.
+
 ## Screenshots
 
 ### GUI
