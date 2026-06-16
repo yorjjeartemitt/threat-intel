@@ -86,7 +86,7 @@ char *db_cache_get(const char *ip, const char *checker){
 	sqlite3 *db;
 	sqlite3_open("threats.db",&db);
 	sqlite3_stmt *stmt;
-	sqlite3_prepare_v2(db,"SELECT result FROM cache WHERE ip=? AND checker=?;",-1,&stmt,NULL);
+	sqlite3_prepare_v2(db,"SELECT result FROM cache WHERE ip=? AND checker=? AND checked_at>datetime('now','-24 hours');",-1,&stmt,NULL);
 	sqlite3_bind_text(stmt,1,ip,-1,SQLITE_STATIC);
 	sqlite3_bind_text(stmt,2,checker,-1,SQLITE_STATIC);
 	char *result=NULL;
