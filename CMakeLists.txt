@@ -7,7 +7,7 @@ pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 add_executable(threat-intel main.c api.c db.c threadpool.c)
 
 target_include_directories(threat-intel PRIVATE ${GTK3_INCLUDE_DIRS})
-
+target_compile_options(threat-intel PRIVATE ${GTK3_CFLAGS_OTHER} -Wall -Wextra)
 target_link_libraries(threat-intel
     ${GTK3_LIBRARIES}
     curl
