@@ -16,6 +16,7 @@ COPY . .
 
 RUN gcc main.c api.c db.c threadpool.c -o threat-intel \
     $(pkg-config --cflags --libs gtk+-3.0) \
-    -lcurl -lcjson -lsqlite3 -lpthread
+    -lcurl -lcjson -lsqlite3 -lpthread \
+    -Wall -Wextra
 
 CMD ["./threat-intel"]
