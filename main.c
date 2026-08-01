@@ -1,5 +1,6 @@
 #include <gtk/gtk.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 #include "api.h"
 #include "threadpool.h"
 #include "db.h"
@@ -45,7 +46,7 @@ static Checker checkers[] = {
     {"IPinfo",check_ipinfo,NULL,NULL,NULL,TRUE},
     {"PulseDive",check_pulsedive,NULL,NULL,NULL,TRUE},
     {"Alien-Vault-OTX",check_alien_vault_otx,NULL,NULL,NULL,TRUE},
-    {"IPQS",check_ipqs,NULL,NULL,NULL,TRUE}
+    {"IPQS",check_ipqs,NULL,NULL,NULL,TRUE},
 };
 static ThreadPool pool;
 static int checker_count = sizeof(checkers)/sizeof(checkers[0]);
@@ -129,22 +130,68 @@ static void check_clicked(GtkButton *btn,gpointer data){
 	}
 }
 static void load_env(){
-	FILE *f=fopen(".env","r");
-	if (!f){
+    FILE *f=fopen(".env","r");
+    if (!f){
+        return;
+    }
+    char line[256];
+    while (fgets(line,sizeof(line),f)){
+        char *eq=strchr(line,'=');
+        if (!eq || eq==line){
+            continue;
+        }
+        *eq=0;
+        char *val=eq+1;
+        val[strcspn(val,"\n")]=0;
+        setenv(line,val,0);
+    }
+    fclose(f);
+}
+
+static void error_dialog(const char *msg){
+	GtkWidget *dialog=gtk_message_dialog_new(NULL,GTK_DIALOG_MODAL,GTK_MESSAGE_ERROR,GTK_BUTTONS_OK,"%s",msg);
+	gtk_dialog_run(GTK_DIALOG(dialog));
+	gtk_widget_destroy(dialog);
+}
+static void on_help_click(GtkMenuItem *item,gpointer user_data){
+	GError *error=NULL;
+	char exe_path[1024];
+	ssize_t len=readlink("/proc/self/exe",exe_path,sizeof(exe_path)-1);
+	if (len==-1){
+		error_dialog("Cannot resolve executable path");
 		return;
 	}
-	char line[256];
-	while (fgets(line,sizeof(line),f)){
-		char *eq=strchr(line,'=');
-		if (!eq){
-			continue;
+	exe_path[len]='\0';
+	char *dir=g_path_get_dirname(exe_path);
+	char *uri=g_strdup_printf("file://%s/help.html",dir);
+	g_free(dir);
+
+	gboolean ok=gtk_show_uri_on_window(NULL,uri,GDK_CURRENT_TIME,&error);
+	if (!ok){
+		error_dialog("Cannot open browser");
+		if (error){
+			g_printerr("Debug: %s\n",error->message);
+			g_error_free(error);
 		}
-		*eq=0;
-		char *val=eq+1;
-		val[strcspn(val,"\n")]=0;
-		setenv(line,val,0);
 	}
-	fclose(f);
+	g_free(uri);
+}
+static void on_bug_click(GtkMenuItem *item,gpointer user_data){
+	GError *error=NULL;
+	char *title=g_uri_escape_string("Found a Bug",NULL,FALSE);
+	char *body=g_uri_escape_string("# Write here a bug\n\n**Steps to reproduce:**\n\n**Expected:**\n\n**Actual:**\n",NULL,FALSE);
+	char *uri=g_strdup_printf("https://github.com/yorjjeartemitt/threat-intel/issues/new?title=%s&body=%s",title,body);
+	gboolean ok=gtk_show_uri_on_window(NULL,uri,GDK_CURRENT_TIME,&error);
+	if (!ok){
+		error_dialog("Cannot open browser");
+		if (error){
+			g_printerr("Debug: %s\n",error->message);
+			g_error_free(error);
+		}
+	}
+	g_free(title);
+	g_free(body);
+	g_free(uri);
 }
 static void toggle_checker(GtkButton *btn,gpointer data){
 	Checker *c=(Checker *)data;
@@ -153,85 +200,100 @@ static void toggle_checker(GtkButton *btn,gpointer data){
 	gtk_button_set_label(btn,c->enabled ? "On": "Off");
 }
 static void encode_clicked(GtkButton *btn,gpointer data){
-	EncodeWidgets *w=(EncodeWidgets  *)data;
-	const char *text=gtk_entry_get_text(GTK_ENTRY(w->input));
-	char *type=gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(w->combo));
-	if (!type){
-		gtk_entry_set_text(GTK_ENTRY(w->output),"select type");
-		return;
-	}
-	char result[1024]={0};
-	if (strcmp(type,"text to hex")==0){
-		for (int i=0;text[i];i++){
-			char buf[4];
-			snprintf(buf,sizeof(buf),"%02x ",(unsigned char)text[i]);
-			strncat(result,buf,sizeof(result)-strlen(result)-1);
-		}
-	} else if (strcmp(type,"rot13 to text")==0 || strcmp(type,"text to rot13")==0){
-		for (int i=0;text[i];i++){
-			char c=text[i];
-			if (c>='a' && c<='z') c=(c -'a'+13) %26 + 'a';
-			else if (c>='A' && c<='Z') c=(c-'A'+13)%26+'A';
-			result[i]=c;
-		}
-	} else if (strcmp(type,"hex to text")==0){
-		int j=0;
-		for (int i=0;text[i] && text[i+1];){
-			if (text[i]==' '){i++;continue;}
-			char buf[3]={text[i],text[i+1],0};
-			char ch=(char)strtol(buf,NULL,16);
-			result[j++]=(char)strtol(buf,NULL,16);
-			i+=2;
-		}
-	} else if (strcmp(type,"text to base64")==0){
-		gchar *encoded=g_base64_encode((const guchar *)text,strlen(text));
-		snprintf(result,sizeof(result),"%s",encoded);
-		g_free(encoded);
+    EncodeWidgets *w=(EncodeWidgets *)data;
+    const char *text=gtk_entry_get_text(GTK_ENTRY(w->input));
+    char *type=gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(w->combo));
+    if (!type){
+        gtk_entry_set_text(GTK_ENTRY(w->output),"select type");
+        return;
+    }
+    char result[1024]={0};
+    size_t cap = sizeof(result)-1;
 
-	}else if (strcmp(type,"base64 to text")==0){
-		gsize len;
-		guchar *decoded=g_base64_decode(text,&len);
-		snprintf(result,sizeof(result),"%.*s",(int)len,decoded);
-		g_free(decoded);
-	} else if (strcmp(type,"text to binary")==0){
-		for (int i=0;text[i];i++){
-			char buf[10];
-			snprintf(buf,sizeof(buf),"%08b",text[i]);
-			strncat(result,buf,sizeof(result)-strlen(result)-1);
-		}
-	}else if (strcmp(type,"binary to text")==0){
-		int j=0;
-		for (int i=0;text[i];){
-			while(text[i]==' ')i++;continue;
-			if (!text[i]) break;
-			char buf[9]={0};
-			strncpy(buf,text+i,8);
-			result[j++]=(char)strtol(buf,NULL,2);
-			i+=8;
-		}
-	} else if (strcmp(type,"text to decimal")==0){
-		for (int i=0;text[i];i++){
-			char buf[6];
-			snprintf(buf,sizeof(buf),"%d ",(unsigned char)text[i]);
-			strncat(result,buf,sizeof(result)-strlen(result)-1);
-		}
-	}
-	gtk_entry_set_text(GTK_ENTRY(w->output),result);
-	g_free(type);
+    if (strcmp(type,"text to hex")==0){
+        for (int i=0; text[i] && strlen(result) < cap; i++){
+            char buf[4];
+            snprintf(buf,sizeof(buf),"%02x ",(unsigned char)text[i]);
+            strncat(result,buf,cap-strlen(result));
+        }
+    } else if (strcmp(type,"rot13 to text")==0 || strcmp(type,"text to rot13")==0){
+        int i;
+        for (i=0;text[i] && i<(int)cap;i++){
+            char c=text[i];
+            if (c>='a' && c<='z') c=(c-'a'+13)%26+'a';
+            else if (c>='A' && c<='Z') c=(c-'A'+13)%26+'A';
+            result[i]=c;
+        }
+        result[i]='\0';
+    } else if (strcmp(type,"hex to text")==0){
+        int j=0;
+        for (int i=0;text[i] && text[i+1] && j<(int)cap;){
+            if (text[i]==' '){i++;continue;}
+            char buf[3]={text[i],text[i+1],0};
+            result[j++]=(char)strtol(buf,NULL,16);
+            i+=2;
+        }
+        result[j]='\0';
+    } else if (strcmp(type,"text to base64")==0){
+        gchar *encoded=g_base64_encode((const guchar *)text,strlen(text));
+        snprintf(result,sizeof(result),"%s",encoded);
+        g_free(encoded);
+    } else if (strcmp(type,"base64 to text")==0){
+        gsize len;
+        guchar *decoded=g_base64_decode(text,&len);
+        if (decoded){
+            gsize copy_len=(len<cap)? len: cap;
+            memcpy(result,decoded,copy_len);
+            result[copy_len]='\0';
+            g_free(decoded);
+        }
+    } else if (strcmp(type,"text to binary")==0){
+        for (int i=0; text[i] && strlen(result) < cap; i++){
+            char buf[9];
+            unsigned char c=(unsigned char)text[i];
+            for (int b=7;b>=0;b--){
+                buf[7-b]=((c>>b) & 1) ? '1':'0';
+            }
+            buf[8]='\0';
+            strncat(result,buf,cap-strlen(result));
+            if (strlen(result) < cap){
+                strncat(result," ",cap-strlen(result));
+            }
+        }
+    } else if (strcmp(type,"binary to text")==0){
+        int j=0;
+        for (int i=0;text[i] && j<(int)cap;){
+            while (text[i]==' ') i++;
+            if (!text[i]) break;
+            char buf[9]={0};
+            strncpy(buf,text+i,8);
+            result[j++]=(char)strtol(buf,NULL,2);
+            i+=8;
+        }
+        result[j]='\0';
+    } else if (strcmp(type,"text to decimal")==0){
+        for (int i=0; text[i] && strlen(result) < cap; i++){
+            char buf[6];
+            snprintf(buf,sizeof(buf),"%d ",(unsigned char)text[i]);
+            strncat(result,buf,cap-strlen(result));
+        }
+    }
+    gtk_entry_set_text(GTK_ENTRY(w->output),result);
+    g_free(type);
 }
-
 static void show_encode(GtkMenuItem *item,gpointer data){
 	gtk_stack_set_visible_child_name(GTK_STACK(data),"encode");
 }
 static void show_main(GtkWidget *widget,gpointer data){
 	gtk_stack_set_visible_child_name(GTK_STACK(data),"main");
 }
-static void menu_bar(GtkWidget *box,GtkApplication *app,GtkWidget *stack){
+static void menu_bar(GtkWidget *box,GtkApplication *app,GtkWidget *stack,GtkWidget *window){
 	GtkWidget *menubar=gtk_menu_bar_new();
 
 	GtkWidget *file_menu=gtk_menu_new();
 	gtk_menu_shell_append(GTK_MENU_SHELL(file_menu),make_menu_item("Quit",G_CALLBACK(quits),app));
 	GtkWidget *file_item=gtk_menu_item_new_with_label("File");
+
 	gtk_menu_item_set_submenu(GTK_MENU_ITEM(file_item),file_menu);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menubar),file_item);
 	GtkWidget *tools_menu=gtk_menu_new();
@@ -247,13 +309,23 @@ static void menu_bar(GtkWidget *box,GtkApplication *app,GtkWidget *stack){
 	gtk_menu_item_set_submenu(GTK_MENU_ITEM(theme_item),view_theme);
 	gtk_menu_item_set_submenu(GTK_MENU_ITEM(tools_item),tools_menu);
 	gtk_menu_item_set_submenu(GTK_MENU_ITEM(view_item),view_menu);
+	
+	GtkWidget *help_menu=gtk_menu_new();
+	GtkWidget *help_item=gtk_menu_item_new_with_label("Help");
+	gtk_menu_item_set_submenu(GTK_MENU_ITEM(help_item),help_menu);
+	GtkWidget *about_item=gtk_menu_item_new_with_label("Local Help (web)");
+	GtkWidget *bug_item=gtk_menu_item_new_with_label("Report a Bug");
+	gtk_menu_shell_append(GTK_MENU_SHELL(help_menu),about_item);
+	gtk_menu_shell_append(GTK_MENU_SHELL(help_menu),bug_item);
+	g_signal_connect(about_item,"activate",G_CALLBACK(on_help_click),NULL);
+	g_signal_connect(bug_item,"activate",G_CALLBACK(on_bug_click),NULL);
 
 	gtk_menu_shell_append(GTK_MENU_SHELL(menubar),view_item);
 	gtk_menu_shell_append(GTK_MENU_SHELL(view_menu),theme_item);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menubar),tools_item);
 	gtk_menu_shell_append(GTK_MENU_SHELL(view_theme),dark_item);
 	gtk_menu_shell_append(GTK_MENU_SHELL(view_theme),white_item);
-
+	gtk_menu_shell_append(GTK_MENU_SHELL(menubar),help_item);
 	gtk_box_pack_start(GTK_BOX(box),menubar,FALSE,FALSE,0);	
 }
 static void activate(GtkApplication *app,gpointer data){
@@ -287,7 +359,6 @@ static void activate(GtkApplication *app,gpointer data){
 		gtk_label_set_xalign(GTK_LABEL(checkers[i].btn),0);
 		GtkWidget *toggle=gtk_button_new_with_label("On");
 		gtk_button_set_label(GTK_BUTTON(toggle),checkers[i].enabled?"On":"Off");
-		checkers[i].check=toggle;
 		g_signal_connect(toggle,"clicked",G_CALLBACK(toggle_checker),&checkers[i]);
 		gtk_box_pack_start(GTK_BOX(row),checkers[i].btn,TRUE,TRUE,3);
 		gtk_box_pack_end(GTK_BOX(row),toggle,FALSE,FALSE,2);
@@ -300,7 +371,7 @@ static void activate(GtkApplication *app,gpointer data){
 	GtkWidget *top_row=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,10);
 	GtkWidget *start_encode_btn=gtk_button_new_with_label("start");
 	GtkWidget *vbox=gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
-	menu_bar(vbox,app,stack);
+	menu_bar(vbox,app,stack,window);
 	gtk_box_pack_start(GTK_BOX(vbox),stack,TRUE,TRUE,0);
 	gtk_container_add(GTK_CONTAINER(window),vbox);
 	ew->combo=gtk_combo_box_text_new();

@@ -270,6 +270,14 @@ char *check_ipqs(const char *ip){
 		cJSON *vpn=cJSON_GetObjectItem(json,"vpn");
 		cJSON *tor=cJSON_GetObjectItem(json,"tor");
 		cJSON *country=cJSON_GetObjectItem(json,"country_code");
+		cJSON *success = cJSON_GetObjectItem(json, "success");
+		if (success && success->type == cJSON_False) {
+    		cJSON *msg = cJSON_GetObjectItem(json, "message");
+    		char *res = malloc(256);
+    		snprintf(res, 256, "IPQS error: %s", msg ? msg->valuestring : "unknown");
+    		cJSON_Delete(json);
+    		return res;
+		}
 		if (!fraud){
 			cJSON_Delete(json);
 			return NULL;

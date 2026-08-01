@@ -17,6 +17,14 @@ case "$1" in
             -v "$(pwd)/threats.db:/app/threats.db" \
             threat-intel /app/threat-intel
         ;;    
+    docker_x11)
+        touch threats.db
+        docker run \
+            -e DISPLAY=host.docker.internal:0 \
+            --env-file .env \
+            -v "$(pwd)/threats.db:/app/threats.db" \
+            threat-intel /app/threat-intel
+        ;;
     gcc)
         gcc main.c api.c db.c threadpool.c -o threat-intel \
             $(pkg-config --cflags --libs gtk+-3.0) \
@@ -25,8 +33,12 @@ case "$1" in
     cmake)
 	    mkdir -p build && cd build && cmake .. && make && cd .. && ./build/threat-intel
     	;;
+    
+    clear)
+        rm -rf threats.db threat-intel build
+        ;;
     *)
-        echo "Usage: run {sql|docker|gcc|cmake}"
+        echo "Usage: run {sql|docker|docker_x11|gcc|cmake|clear}"
         exit 1
         ;;
 esac

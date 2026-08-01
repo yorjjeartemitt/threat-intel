@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threat Intel — User's Guide</title>
+<style>
+    :root {
+        --bg: #1a1a1a;
+        --sidebar-bg: #111;
+        --border: #333;
+        --text: #eee;
+        --muted: #999;
+        --accent: #4a8fc0;
+        --code-bg: #222;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        color: var(--text);
+        background: var(--bg);
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        grid-template-rows: auto 1fr;
+        min-height: 100vh;
+    }
+
+    header {
+        grid-column: 1 / -1;
+        background: var(--accent);
+        color: white;
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border);
+        position: relative;
+    }
+
+    header h1 { margin: 0; font-size: 1.4rem; }
+    header p { margin: 4px 0 0; opacity: 0.85; font-size: 0.85rem; }
+
+    nav {
+        background: var(--sidebar-bg);
+        border-right: 1px solid var(--border);
+        padding: 16px 0;
+        overflow-y: auto;
+        position: sticky;
+        top: 0;
+        align-self: start;
+        height: 100vh;
+    }
+
+    nav ul { list-style: none; margin: 0; padding: 0; }
+    nav li a {
+        display: block;
+        padding: 6px 20px;
+        color: var(--text);
+        text-decoration: none;
+        font-size: 0.9rem;
+        border-left: 3px solid transparent;
+    }
+    nav li a:hover {
+        background: #222;
+        border-left-color: var(--accent);
+    }
+    nav li.sub a {
+        padding-left: 34px;
+        font-size: 0.83rem;
+        color: var(--muted);
+    }
+    nav .section-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--accent);
+        padding: 14px 20px 4px;
+        font-weight: bold;
+        letter-spacing: 0.03em;
+    }
+
+    main {
+        padding: 24px 40px 80px;
+        max-width: 900px;
+    }
+
+    main section {
+        margin-bottom: 56px;
+        padding-top: 8px;
+        border-top: 1px solid var(--border);
+    }
+    main section:first-child { border-top: none; }
+
+    h2 {
+        color: var(--accent);
+        border-bottom: 2px solid var(--border);
+        padding-bottom: 6px;
+        margin-top: 0;
+    }
+    h3 { color: var(--text); margin-top: 28px; }
+    h4 { color: var(--accent); margin-bottom: 4px; }
+
+    code, pre {
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        font-family: "Fira Code", monospace;
+        font-size: 0.85rem;
+    }
+    code { padding: 2px 5px; }
+    pre { padding: 12px; overflow-x: auto; }
+    pre code { border: none; padding: 0; background: none; }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 12px 0;
+        font-size: 0.9rem;
+    }
+    th, td {
+        border: 1px solid var(--border);
+        padding: 6px 10px;
+        text-align: left;
+        vertical-align: top;
+    }
+    th { background: var(--sidebar-bg); }
+
+    .note, .tip, .warn {
+        border-left: 4px solid var(--accent);
+        padding: 10px 14px;
+        margin: 14px 0;
+        font-size: 0.9rem;
+        background: #16232c;
+    }
+    .tip { border-left-color: #4ac07a; background: #12241a; }
+    .warn { border-left-color: #c0894a; background: #241c12; }
+    .note b, .tip b, .warn b { color: var(--accent); }
+    .tip b { color: #6bd196; }
+    .warn b { color: #d9a25f; }
+
+    .badges img { margin: 2px; }
+
+    .screenshot {
+        max-width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        margin: 8px 0 16px;
+        display: block;
+    }
+    .screenshot-missing {
+        border: 1px dashed var(--border);
+        border-radius: 4px;
+        padding: 24px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin: 8px 0 16px;
+        background: var(--code-bg);
+    }
+
+    ul.feature-list { padding-left: 20px; }
+    ul.feature-list li { margin-bottom: 4px; }
+
+    ol.steps { padding-left: 20px; }
+    ol.steps li { margin-bottom: 10px; }
+
+    .step-num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px; height: 22px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: white;
+        font-size: 0.75rem;
+        font-weight: bold;
+        margin-right: 8px;
+    }
+
+    .kbd {
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-bottom-width: 2px;
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-family: monospace;
+        font-size: 0.8rem;
+    }
+
+    .lang-switch {
+        position: absolute;
+        top: 16px;
+        right: 24px;
+    }
+    .lang-switch button {
+        background: rgba(255,255,255,0.15);
+        border: 1px solid rgba(255,255,255,0.4);
+        color: white;
+        padding: 4px 10px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        border-radius: 4px;
+    }
+    .lang-switch button.active {
+        background: white;
+        color: var(--accent);
+        font-weight: bold;
+    }
+
+    .toc-num { color: var(--muted); margin-right: 4px; }
+        footer {
+        grid-column: 1 / -1;
+        background: var(--sidebar-bg);
+        border-top: 1px solid var(--border);
+        padding: 18px 24px;
+    }
+    .footer-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 6px 18px;
+        font-size: 0.85rem;
+        color: var(--muted);
+    }
+    .footer-content span {
+        padding-right: 12px;
+        border-right: 1px solid var(--border);
+    }
+    .footer-content a {
+        color: var(--text);
+        text-decoration: none;
+        position: relative;
+        transition: color 0.15s ease;
+    }
+    .footer-content a:hover {
+        color: var(--accent);
+    }
+    .footer-content a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -3px;
+        width: 0;
+        height: 1px;
+        background: var(--accent);
+        transition: width 0.2s ease;
+    }
+    .footer-content a:hover::after {
+        width: 100%;
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <div class="lang-switch">
+        <button id="btn-uk" class="active" onclick="setLang('uk')">UA</button>
+        <button id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+    <h1>Threat Intel — <span data-uk="Посібник користувача" data-en="User's Guide">Посібник користувача</span></h1>
+    <p><span data-uk="GTK3-застосунок для перевірки репутації IP-адрес через 7 threat intelligence API одночасно"
+              data-en="GTK3 app for checking IP reputation across 7 threat intelligence APIs at once">GTK3-застосунок для перевірки репутації IP-адрес через 7 threat intelligence API одночасно</span></p>
+</header>
+
+<nav>
+    <div class="section-title"><span data-uk="Вступ" data-en="Preface">Вступ</span></div>
+    <ul>
+        <li><a href="#about"><span data-uk="Що таке Threat Intel" data-en="What is Threat Intel">Що таке Threat Intel</span></a></li>
+        <li><a href="#why"><span data-uk="Навіщо створено" data-en="Why I built this">Навіщо створено</span></a></li>
+        <li><a href="#stack"><span data-uk="Технологічний стек" data-en="Tech stack">Технологічний стек</span></a></li>
+    </ul>
+
+    <div class="section-title">1. <span data-uk="Початок роботи" data-en="Getting Started">Початок роботи</span></div>
+    <ul>
+        <li class="sub"><a href="#deps"><span data-uk="1.1. Залежності" data-en="1.1. Dependencies">1.1. Залежності</span></a></li>
+        <li class="sub"><a href="#keys"><span data-uk="1.2. Отримання API ключів" data-en="1.2. Getting API keys">1.2. Отримання API ключів</span></a></li>
+        <li class="sub"><a href="#build"><span data-uk="1.3. Збірка та запуск" data-en="1.3. Build & Run">1.3. Збірка та запуск</span></a></li>
+    </ul>
+
+    <div class="section-title">2. <span data-uk="Перевірка IP-адрес" data-en="Using the IP Checker">Перевірка IP-адрес</span></div>
+    <ul>
+        <li class="sub"><a href="#ip-workflow"><span data-uk="2.1. Як зробити перевірку" data-en="2.1. Running a lookup">2.1. Як зробити перевірку</span></a></li>
+        <li class="sub"><a href="#ip-toggles"><span data-uk="2.2. Вибір джерел (toggle)" data-en="2.2. Choosing sources">2.2. Вибір джерел (toggle)</span></a></li>
+        <li class="sub"><a href="#ip-results"><span data-uk="2.3. Читання результатів" data-en="2.3. Reading the results">2.3. Читання результатів</span></a></li>
+        <li class="sub"><a href="#ip-cache"><span data-uk="2.4. Кешування в SQLite" data-en="2.4. SQLite caching">2.4. Кешування в SQLite</span></a></li>
+    </ul>
+
+    <div class="section-title">3. <span data-uk="Decode / Encode" data-en="Decode / Encode">Decode / Encode</span></div>
+    <ul>
+        <li class="sub"><a href="#decode-workflow"><span data-uk="3.1. Як користуватись" data-en="3.1. How to use it">3.1. Як користуватись</span></a></li>
+        <li class="sub"><a href="#decode-formats"><span data-uk="3.2. Підтримувані формати" data-en="3.2. Supported formats">3.2. Підтримувані формати</span></a></li>
+    </ul>
+
+    <div class="section-title">4. <span data-uk="Налаштування та інше" data-en="Preferences & Extras">Налаштування та інше</span></div>
+    <ul>
+        <li class="sub"><a href="#theme"><span data-uk="4.1. Темна/світла тема" data-en="4.1. Dark/light theme">4.1. Темна/світла тема</span></a></li>
+        <li class="sub"><a href="#sql-viewer"><span data-uk="4.2. Перегляд бази (SQL viewer)" data-en="4.2. SQL viewer">4.2. Перегляд бази (SQL viewer)</span></a></li>
+        <li class="sub"><a href="#docker"><span data-uk="4.3. Docker / X11" data-en="4.3. Docker / X11">4.3. Docker / X11</span></a></li>
+        <li class="sub"><a href="#screenshots"><span data-uk="4.4. Скріншоти" data-en="4.4. Screenshots">4.4. Скріншоти</span></a></li>
+    </ul>
+    <div class="section-title">5. <span data-uk="Часті проблеми (FAQ)" data-en="Troubleshooting (FAQ)">Часті проблеми (FAQ)</span></div>
+        <ul>
+            <li class="sub"><a href="#faq-build"><span data-uk="5.1. Помилки збірки" data-en="5.1. Build errors">5.1. Помилки збірки</span></a></li>
+            <li class="sub"><a href="#faq-gui"><span data-uk="5.3. GUI не запускається" data-en="5.3. GUI won't launch">5.2. GUI не запускається</span></a></li>
+        </ul>
+</nav>
+
+<main>
+    <section id="about">
+        <h2><span data-uk="Що таке Threat Intel" data-en="What is Threat Intel">Що таке Threat Intel</span></h2>
+        <p><span data-uk="Threat Intel — це десктопний GTK3-застосунок, який перевіряє репутацію IP-адреси одразу через 7 threat intelligence сервісів і показує зведений результат в одному вікні, замість того щоб відкривати кожен сервіс окремо в браузері."
+                  data-en="Threat Intel is a desktop GTK3 app that checks an IP address's reputation across 7 threat intelligence services at once and shows a combined result in a single window, instead of opening each service separately in a browser.">Threat Intel — це десктопний GTK3-застосунок, який перевіряє репутацію IP-адреси одразу через 7 threat intelligence сервісів і показує зведений результат в одному вікні, замість того щоб відкривати кожен сервіс окремо в браузері.</span></p>
+        <div class="note">
+            <b><span data-uk="Для кого цей посібник" data-en="Who this guide is for">Для кого цей посібник</span>:</b>
+            <span data-uk=" для будь-кого, хто вже зібрав застосунок і хоче зрозуміти, як ним користуватись день у день — від першого запуску до читання результатів перевірки."
+                  data-en=" for anyone who already built the app and wants to understand how to use it day to day — from first launch to reading lookup results."> для будь-кого, хто вже зібрав застосунок і хоче зрозуміти, як ним користуватись день у день — від першого запуску до читання результатів перевірки.</span>
+        </div>
+    </section>
+
+    <section id="why">
+        <h2><span data-uk="Навіщо створено" data-en="Why I built this">Навіщо створено</span></h2>
+        <p><span data-uk="Під час аналізу мережевого трафіку у Wireshark доводилось одночасно тримати відкритими AbuseIPDB, Shodan, VirusTotal і ще 4 вкладки — вручну зіставляючи результати для кожної підозрілої IP-адреси."
+                  data-en="While analyzing network traffic in Wireshark, I kept juggling AbuseIPDB, Shodan, VirusTotal and 4 other tabs simultaneously — manually correlating results for every suspicious IP.">Під час аналізу мережевого трафіку у Wireshark доводилось одночасно тримати відкритими AbuseIPDB, Shodan, VirusTotal і ще 4 вкладки — вручну зіставляючи результати для кожної підозрілої IP-адреси.</span></p>
+        <p><span data-uk="Цей проєкт об'єднує всі джерела в один пошук. Кешування в SQLite означає, що повторні IP не витрачають ліміти API-запитів."
+                  data-en="This project consolidates all of them into one lookup. SQLite caching means repeated IPs don't burn through API rate limits.">Цей проєкт об'єднує всі джерела в один пошук. Кешування в SQLite означає, що повторні IP не витрачають ліміти API-запитів.</span></p>
+    </section>
+
+    <section id="stack">
+        <h2><span data-uk="Технологічний стек" data-en="Tech stack">Технологічний стек</span></h2>
+        <div class="badges" align="center">
+            <img src="https://img.shields.io/badge/C-00599C?style=for-the-badge&logo=c&logoColor=white" alt="C">
+            <img src="https://img.shields.io/badge/GTK3-215732?style=for-the-badge&logo=gtk&logoColor=white" alt="GTK3">
+            <img src="https://img.shields.io/badge/libcurl-073551?style=for-the-badge&logo=curl&logoColor=white" alt="libcurl">
+            <img src="https://img.shields.io/badge/cJSON-555555?style=for-the-badge&logoColor=white" alt="cJSON">
+            <img src="https://img.shields.io/badge/SQLite3_-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite3">
+            <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
+            <img src="https://img.shields.io/badge/pthreads-555555?style=for-the-badge&logoColor=white" alt="pthreads">
+        </div>
+        <ul class="feature-list">
+            <li><span data-uk="Перевірка репутації IP через 7 API одночасно (багатопоточність)"
+                      data-en="IP reputation check via 7 APIs simultaneously (multithreaded)">Перевірка репутації IP через 7 API одночасно (багатопоточність)</span></li>
+            <li><span data-uk="Кешування результатів у SQLite (без дублювання запитів)"
+                      data-en="Results cached in SQLite (no duplicate requests)">Кешування результатів у SQLite (без дублювання запитів)</span></li>
+            <li><span data-uk="Інструмент кодування/декодування (hex, base64, binary, rot13)"
+                      data-en="Encode/Decode tool (hex, base64, binary, rot13)">Інструмент кодування/декодування (hex, base64, binary, rot13)</span></li>
+            <li><span data-uk="Темна/світла тема зі збереженням налаштувань"
+                      data-en="Dark/light theme with persistence">Темна/світла тема зі збереженням налаштувань</span></li>
+            <li><span data-uk="Перемикач для кожного API окремо (увімкнути/вимкнути)"
+                      data-en="Per-checker toggle (enable/disable APIs)">Перемикач для кожного API окремо (увімкнути/вимкнути)</span></li>
+            <li><span data-uk="Підтримка Docker (в т.ч. через XWayland)" data-en="Docker support (incl. via XWayland)">Підтримка Docker (в т.ч. через XWayland)</span></li>
+        </ul>
+    </section>
+    <section id="deps">
+        <h2>1. <span data-uk="Початок роботи" data-en="Getting Started">Початок роботи</span></h2>
+
+        <h3 id="deps-h">1.1. <span data-uk="Залежності" data-en="Dependencies">Залежності</span></h3>
+        <p><span data-uk="Перед збіркою встанови системні бібліотеки, потрібні застосунку."
+                  data-en="Before building, install the system libraries the app depends on.">Перед збіркою встанови системні бібліотеки, потрібні застосунку.</span></p>
+
+        <h4>Arch Linux</h4>
+        <pre><code>sudo pacman -S gtk3 curl cjson sqlite cmake pkgconf</code></pre>
+
+        <h4>Ubuntu/Debian</h4>
+        <pre><code>sudo apt install libgtk-3-dev libcurl4-openssl-dev libcjson-dev libsqlite3-dev cmake pkg-config</code></pre>
+
+        <h3 id="keys">1.2. <span data-uk="Отримання API ключів" data-en="Getting API keys">Отримання API ключів</span></h3>
+        <p><span data-uk="Застосунок сам по собі нічого не перевірить без ключів — кожне джерело потребує окремої безкоштовної реєстрації. Зареєструйся на кожному сервісі нижче та отримай персональний API ключ."
+                  data-en="The app can't check anything on its own without keys — each source needs its own free registration. Sign up on each service below and get your personal API key.">Застосунок сам по собі нічого не перевірить без ключів — кожне джерело потребує окремої безкоштовної реєстрації. Зареєструйся на кожному сервісі нижче та отримай персональний API ключ.</span></p>
+
+        <table>
+            <tr>
+                <th><span data-uk="Сервіс" data-en="Service">Сервіс</span></th>
+                <th><span data-uk="Реєстрація" data-en="Register">Реєстрація</span></th>
+                <th><span data-uk="Що дає" data-en="What it provides">Що дає</span></th>
+            </tr>
+            <tr><td>AbuseIPDB</td><td><a href="https://www.abuseipdb.com" target="_blank">abuseipdb.com</a></td>
+                <td><span data-uk="Скор зловживань, кількість репортів" data-en="Abuse confidence score, report count">Скор зловживань, кількість репортів</span></td></tr>
+            <tr><td>VirusTotal</td><td><a href="https://www.virustotal.com" target="_blank">virustotal.com</a></td>
+                <td><span data-uk="Детекції антивірусних движків" data-en="AV engine detections">Детекції антивірусних движків</span></td></tr>
+            <tr><td>Shodan</td><td><a href="https://shodan.io" target="_blank">shodan.io</a></td>
+                <td><span data-uk="Відкриті порти, банери сервісів" data-en="Open ports, service banners">Відкриті порти, банери сервісів</span></td></tr>
+            <tr><td>IPinfo</td><td><a href="https://ipinfo.io" target="_blank">ipinfo.io</a></td>
+                <td><span data-uk="Геолокація, ASN, провайдер" data-en="Geolocation, ASN, ISP">Геолокація, ASN, провайдер</span></td></tr>
+            <tr><td>PulseDive</td><td><a href="https://pulsedive.com" target="_blank">pulsedive.com</a></td>
+                <td><span data-uk="Ризик-скор, пов'язані індикатори" data-en="Risk score, related indicators">Ризик-скор, пов'язані індикатори</span></td></tr>
+            <tr><td>AlienVault OTX</td><td><a href="https://otx.alienvault.com" target="_blank">otx.alienvault.com</a></td>
+                <td><span data-uk="Pulse-звіти від спільноти" data-en="Community pulse reports">Pulse-звіти від спільноти</span></td></tr>
+            <tr><td>IPQS</td><td><a href="https://www.ipqualityscore.com" target="_blank">ipqualityscore.com</a></td>
+                <td><span data-uk="Fraud score, VPN/proxy детекція" data-en="Fraud score, VPN/proxy detection">Fraud score, VPN/proxy детекція</span></td></tr>
+        </table>
+
+        <div class="warn">
+            <b><span data-uk="Важливо" data-en="Important">Важливо</span>:</b>
+            <span data-uk=" безкоштовні тарифи мають денні/місячні ліміти запитів. Якщо не потрібне якесь джерело — просто вимкни його тумблером (див. розділ 2.2), не обов'язково реєструватись у всіх семи."
+                  data-en=" free tiers have daily/monthly request limits. If you don't need a particular source, just switch it off in the toggle (see section 2.2) — you don't have to register with all seven."> безкоштовні тарифи мають денні/місячні ліміти запитів. Якщо не потрібне якесь джерело — просто вимкни його тумблером (див. розділ 2.2), не обов'язково реєструватись у всіх семи.</span>
+        </div>
+
+        <h3 id="build">1.3. <span data-uk="Збірка та запуск" data-en="Build & Run">Збірка та запуск</span></h3>
+        <pre><code>git clone https://github.com/yorjjeartemitt/threat-intel.git
+cd threat-intel
+cp .env.example .env   # <span data-uk="встав сюди свої ключі з 1.2" data-en="paste your keys from 1.2 here">встав сюди свої ключі з 1.2</span>
+mkdir -p build
+./run gcc     # <span data-uk="збірка через gcc та запуск" data-en="build with gcc and run">збірка через gcc та запуск</span>
+./run cmake   # <span data-uk="збірка через cmake та запуск" data-en="build with cmake and run">збірка через cmake та запуск</span>
+./run docker  # <span data-uk="запуск у docker" data-en="run in docker">запуск у docker</span>
+./run sql     # <span data-uk="перегляд збереженої бази (розділ 4.2)" data-en="view the saved database (section 4.2)">перегляд збереженої бази (розділ 4.2)</span>
+./run docker_x11 # <span data-uk="запуск через xwayland — також підходить для windows/macOS" data-en="run via xwayland — also works on windows/macOS">запуск через xwayland — також підходить для windows/macOS</span></code></pre>
+
+        <div class="tip">
+            <b><span data-uk="Порада" data-en="Tip">Порада</span>:</b>
+            <span data-uk=" якщо застосунок не запускається після ./run gcc — спочатку перевір, що всі пакети з 1.1 стоять, а .env заповнений хоча б для одного сервісу."
+                  data-en=" if the app doesn't start after ./run gcc — first check that all packages from 1.1 are installed and .env is filled in for at least one service."> якщо застосунок не запускається після ./run gcc — спочатку перевір, що всі пакети з 1.1 стоять, а .env заповнений хоча б для одного сервісу.</span>
+        </div>
+    </section>
+    <section id="ip-workflow">
+        <h2>2. <span data-uk="Перевірка IP-адрес" data-en="Using the IP Checker">Перевірка IP-адрес</span></h2>
+
+        <h3>2.1. <span data-uk="Як зробити перевірку" data-en="Running a lookup">Як зробити перевірку</span></h3>
+        <ol class="steps">
+            <li><span class="step-num">1</span><span data-uk="Відкрий головну вкладку застосунку (IP Checker)." data-en="Open the app's main tab (IP Checker).">Відкрий головну вкладку застосунку (IP Checker).</span></li>
+            <li><span class="step-num">2</span><span data-uk="Введи IP-адресу в поле пошуку (наприклад " data-en="Enter an IP address in the search field (e.g. ">Введи IP-адресу в поле пошуку (наприклад </span><code>8.8.8.8</code><span data-uk=")." data-en=").">).</span></li>
+            <li><span class="step-num">3</span><span data-uk="Натисни кнопку перевірки — застосунок одночасно (в окремих потоках) відправить запити до всіх увімкнених джерел." data-en="Click the check button — the app simultaneously (in separate threads) sends requests to all enabled sources.">Натисни кнопку перевірки — застосунок одночасно (в окремих потоках) відправить запити до всіх увімкнених джерел.</span></li>
+            <li><span class="step-num">4</span><span data-uk="Зачекай, поки всі джерела відповідять — результати з'являються по мірі надходження, не потрібно чекати найповільніше API, щоб побачити перші дані." data-en="Wait for all sources to respond — results appear as they come in, you don't need to wait for the slowest API to see the first data.">Зачекай, поки всі джерела відповідять — результати з'являються по мірі надходження, не потрібно чекати найповільніше API, щоб побачити перші дані.</span></li>
+        </ol>
+
+        <h3 id="ip-toggles">2.2. <span data-uk="Вибір джерел (toggle)" data-en="Choosing sources">Вибір джерел (toggle)</span></h3>
+        <p><span data-uk="Кожне з 7 джерел має свій перемикач увімкнено/вимкнено. Вимкнені джерела повністю пропускаються — запит до них не відправляється, це економить ліміти API."
+                  data-en="Each of the 7 sources has its own on/off toggle. Disabled sources are fully skipped — no request is sent to them, which saves your API limits.">Кожне з 7 джерел має свій перемикач увімкнено/вимкнено. Вимкнені джерела повністю пропускаються — запит до них не відправляється, це економить ліміти API.</span></p>
+        <div class="tip">
+            <b><span data-uk="Порада" data-en="Tip">Порада</span>:</b>
+            <span data-uk=" якщо якийсь ключ ще не отриманий — просто залиши відповідний тумблер вимкненим, застосунок не буде намагатись зробити запит і не покаже помилку авторизації."
+                  data-en=" if you haven't gotten a particular key yet — just leave the corresponding toggle off, the app won't attempt a request and won't show an auth error."> якщо якийсь ключ ще не отриманий — просто залиши відповідний тумблер вимкненим, застосунок не буде намагатись зробити запит і не покаже помилку авторизації.</span>
+        </div>
+
+        <h3 id="ip-results">2.3. <span data-uk="Читання результатів" data-en="Reading the results">Читання результатів</span></h3>
+        <p><span data-uk="Результати групуються по джерелу. Для кожної IP-адреси зазвичай важливо звернути увагу на:"
+                  data-en="Results are grouped by source. For each IP address it's usually worth paying attention to:">Результати групуються по джерелу. Для кожної IP-адреси зазвичай важливо звернути увагу на:</span></p>
+        <ul class="feature-list">
+            <li><span data-uk="скор зловживань / ризику (AbuseIPDB, PulseDive, IPQS)" data-en="abuse/risk score (AbuseIPDB, PulseDive, IPQS)">скор зловживань / ризику (AbuseIPDB, PulseDive, IPQS)</span></li>
+            <li><span data-uk="кількість детекцій антивірусів (VirusTotal)" data-en="AV detection count (VirusTotal)">кількість детекцій антивірусів (VirusTotal)</span></li>
+            <li><span data-uk="відкриті порти й банери (Shodan)" data-en="open ports & banners (Shodan)">відкриті порти й банери (Shodan)</span></li>
+            <li><span data-uk="географію та власника ASN (IPinfo)" data-en="geolocation & ASN owner (IPinfo)">географію та власника ASN (IPinfo)</span></li>
+            <li><span data-uk="ознаки VPN/proxy (IPQS)" data-en="VPN/proxy flags (IPQS)">ознаки VPN/proxy (IPQS)</span></li>
+        </ul>
+        <div class="note">
+            <b><span data-uk="Примітка" data-en="Note">Примітка</span>:</b>
+            <span data-uk=" якщо джерело не відповіло (таймаут, вичерпаний ліміт, невірний ключ) — його блок покаже помилку замість даних; решта джерел на це не впливають."
+                  data-en=" if a source didn't respond (timeout, exhausted limit, invalid key) — its block will show an error instead of data; the rest of the sources are unaffected."> якщо джерело не відповіло (таймаут, вичерпаний ліміт, невірний ключ) — його блок покаже помилку замість даних; решта джерел на це не впливають.</span>
+        </div>
+
+        <h3 id="ip-cache">2.4. <span data-uk="Кешування в SQLite" data-en="SQLite caching">Кешування в SQLite</span></h3>
+        <p><span data-uk="Кожен результат перевірки зберігається локально в SQLite. Якщо ти повторно перевіряєш ту саму IP-адресу, застосунок бере дані з кешу замість нового запиту до API — це економить ліміти запитів і працює миттєво, навіть без інтернету."
+                  data-en="Every lookup result is saved locally in SQLite. If you check the same IP again, the app pulls from the cache instead of hitting the API again — this saves your request limits and works instantly, even offline.">Кожен результат перевірки зберігається локально в SQLite. Якщо ти повторно перевіряєш ту саму IP-адресу, застосунок бере дані з кешу замість нового запиту до API — це економить ліміти запитів і працює миттєво, навіть без інтернету.</span></p>
+        <p><span data-uk="Переглянути всю збережену базу можна через " data-en="You can view the entire saved database via ">Переглянути всю збережену базу можна через </span><code>./run sql</code><span data-uk=" (детальніше у розділі 4.2)." data-en=" (more in section 4.2).">  (детальніше у розділі 4.2).</span></p>
+    </section>
+    <section id="decode-workflow">
+        <h2>3. <span data-uk="Decode / Encode" data-en="Decode / Encode">Decode / Encode</span></h2>
+        <p><span data-uk="Окремий інструмент у застосунку для швидкого кодування та декодування рядків без переходу у зовнішні онлайн-сервіси. Корисно, коли в трафіку або логах трапляється закодований payload."
+                  data-en="A separate tool in the app for quick encoding and decoding of strings without switching to external online services. Useful when traffic or logs contain an encoded payload.">Окремий інструмент у застосунку для швидкого кодування та декодування рядків без переходу у зовнішні онлайн-сервіси. Корисно, коли в трафіку або логах трапляється закодований payload.</span></p>
+
+        <h3 id="decode-workflow-h">3.1. <span data-uk="Як користуватись" data-en="How to use it">Як користуватись</span></h3>
+        <ol class="steps">
+            <li><span class="step-num">1</span><span data-uk="Перейди на вкладку Decode/Encode." data-en="Switch to the Decode/Encode tab.">Перейди на вкладку Decode/Encode.</span></li>
+            <li><span class="step-num">2</span><span data-uk="Встав або введи текст у поле вводу." data-en="Paste or type text into the input field.">Встав або введи текст у поле вводу.</span></li>
+            <li><span class="step-num">3</span><span data-uk="Обери формат (hex / base64 / binary / rot13) та напрямок — decode чи encode." data-en="Choose the format (hex / base64 / binary / rot13) and direction — decode or encode.">Обери формат (hex / base64 / binary / rot13) та напрямок — decode чи encode.</span></li>
+            <li><span class="step-num">4</span><span data-uk="Результат з'являється у полі виводу відразу, без окремої кнопки підтвердження." data-en="The result appears in the output field immediately, no separate confirm button needed.">Результат з'являється у полі виводу відразу, без окремої кнопки підтвердження.</span></li>
+        </ol>
+
+        <h3 id="decode-formats">3.2. <span data-uk="Підтримувані формати" data-en="Supported formats">Підтримувані формати</span></h3>
+        <table>
+            <tr>
+                <th><span data-uk="Формат" data-en="Format">Формат</span></th>
+                <th><span data-uk="Приклад входу" data-en="Example input">Приклад входу</span></th>
+                <th><span data-uk="Коли корисно" data-en="When it's useful">Коли корисно</span></th>
+            </tr>
+            <tr><td>Hex</td><td><code>48 65 6c 6c 6f</code></td>
+                <td><span data-uk="дампи пам'яті, payload з Wireshark" data-en="memory dumps, payloads from Wireshark">дампи пам'яті, payload з Wireshark</span></td></tr>
+            <tr><td>Base64</td><td><code>SGVsbG8=</code></td>
+                <td><span data-uk="закодовані рядки в HTTP/логах, C2-трафік" data-en="encoded strings in HTTP/logs, C2 traffic">закодовані рядки в HTTP/логах, C2-трафік</span></td></tr>
+            <tr><td>Binary</td><td><code>01001000 01101001</code></td>
+                <td><span data-uk="низькорівневий аналіз, CTF-таски" data-en="low-level analysis, CTF tasks">низькорівневий аналіз, CTF-таски</span></td></tr>
+            <tr><td>ROT13</td><td><code>Uryyb</code></td>
+                <td><span data-uk="прості обфускації в спамі/фішингу" data-en="simple obfuscation in spam/phishing">прості обфускації в спамі/фішингу</span></td></tr>
+        </table>
+        <div class="note">
+            <b><span data-uk="Примітка" data-en="Note">Примітка</span>:</b>
+            <span data-uk=" інструмент не звертається до мережі — все відбувається локально, тож його можна використовувати офлайн."
+                  data-en=" the tool doesn't reach out to the network — everything happens locally, so it can be used offline."> інструмент не звертається до мережі — все відбувається локально, тож його можна використовувати офлайн.</span>
+        </div>
+    </section>
+    <section id="theme">
+        <h2>4. <span data-uk="Налаштування та інше" data-en="Preferences & Extras">Налаштування та інше</span></h2>
+
+        <h3>4.1. <span data-uk="Темна/світла тема" data-en="Dark/light theme">Темна/світла тема</span></h3>
+        <p><span data-uk="Перемикач теми знаходиться в шапці/налаштуваннях застосунку. Вибір зберігається між запусками — не потрібно перемикати щоразу."
+                  data-en="The theme switch is located in the app's header/settings. The choice is persisted between launches — no need to switch it every time.">Перемикач теми знаходиться в шапці/налаштуваннях застосунку. Вибір зберігається між запусками — не потрібно перемикати щоразу.</span></p>
+
+        <h3 id="sql-viewer">4.2. <span data-uk="Перегляд бази (SQL viewer)" data-en="SQL viewer">Перегляд бази (SQL viewer)</span></h3>
+        <pre><code>./run sql</code></pre>
+        <p><span data-uk="Ця команда відкриває вбудований переглядач збереженого SQLite-кешу — можна побачити всі раніше перевірені IP-адреси та їхні результати без повторного звернення до API."
+                  data-en="This command opens the built-in viewer for the saved SQLite cache — you can see all previously checked IP addresses and their results without hitting the API again.">Ця команда відкриває вбудований переглядач збереженого SQLite-кешу — можна побачити всі раніше перевірені IP-адреси та їхні результати без повторного звернення до API.</span></p>
+
+        <h3 id="docker">4.3. Docker / X11</h3>
+        <pre><code>./run docker       # <span data-uk="запуск у docker (лінукс з wayland)" data-en="run in docker (linux with wayland)">запуск у docker (лінукс з wayland)</span>
+./run docker_x11   # <span data-uk="запуск через xwayland — підходить і для windows/macOS" data-en="run via xwayland — works on windows/macOS too">запуск через xwayland — підходить і для windows/macOS</span></code></pre>
+        <div class="tip">
+            <b><span data-uk="Порада" data-en="Tip">Порада</span>:</b>
+            <span data-uk=" якщо GUI не з'являється при запуску в Docker — перевір, що X11-сокет прокинутий у контейнер, і що виконано " data-en=" if the GUI doesn't appear when running in Docker — check that the X11 socket is forwarded into the container, and that "> якщо GUI не з'являється при запуску в Docker — перевір, що X11-сокет прокинутий у контейнер, і що виконано </span><code>xhost +local:docker</code><span data-uk=" на хості." data-en=" was run on the host."> на хості.</span>
+        </div>
+
+        <h3 id="screenshots">4.4. <span data-uk="Скріншоти" data-en="Screenshots">Скріншоти</span></h3>
+
+        <h4 id="shot-gui">GUI</h4>
+        <img class="screenshot" src="Pictures/gui.png" alt="gui"
+             onerror="this.outerHTML='<div class=&quot;screenshot-missing&quot;>Pictures/gui.png</div>'">
+
+        <h4 id="shot-decode"><span data-uk="Кодування/Декодування" data-en="Decode/Encode">Кодування/Декодування</span></h4>
+        <img class="screenshot" src="Pictures/decode_encode.png" alt="decode_encode"
+             onerror="this.outerHTML='<div class=&quot;screenshot-missing&quot;>Pictures/decode_encode.png</div>'">
+
+        <h4 id="shot-sql">SQL</h4>
+        <img class="screenshot" src="Pictures/sql.png" alt="sql"
+             onerror="this.outerHTML='<div class=&quot;screenshot-missing&quot;>Pictures/sql.png</div>'">
+
+        <h4 id="shot-wireshark"><span data-uk="Мережа (Wireshark)" data-en="Network (Wireshark)">Мережа (Wireshark)</span></h4>
+        <img class="screenshot" src="Pictures/wireshark.png" alt="wireshark"
+             onerror="this.outerHTML='<div class=&quot;screenshot-missing&quot;>Pictures/wireshark.png</div>'">
+
+        <h4 id="shot-theme"><span data-uk="Теми" data-en="Theme">Теми</span></h4>
+        <img class="screenshot" src="Pictures/theme.png" alt="theme"
+             onerror="this.outerHTML='<div class=&quot;screenshot-missing&quot;>Pictures/theme.png</div>'">
+    </section>
+    <section id="faq-build">
+        <h2>5. <span data-uk="Часті проблеми (FAQ)" data-en="Troubleshooting (FAQ)">Часті проблеми (FAQ)</span></h2>
+
+        <h3>5.1. <span data-uk="Помилки збірки" data-en="Build errors">Помилки збірки</span></h3>
+        <table>
+            <tr>
+                <th><span data-uk="Симптом" data-en="Symptom">Симптом</span></th>
+                <th><span data-uk="Причина / рішення" data-en="Cause / fix">Причина / рішення</span></th>
+            </tr>
+            <tr>
+                <td><code>fatal error: gtk/gtk.h: No such file</code></td>
+                <td><span data-uk="Не встановлені GTK3 dev-пакети — див. розділ 1.1" data-en="GTK3 dev packages not installed — see section 1.1">Не встановлені GTK3 dev-пакети — див. розділ 1.1</span></td>
+            </tr>
+            <tr>
+                <td><code>undefined reference to 'curl_easy_init'</code></td>
+                <td><span data-uk="Лінкер не бачить libcurl — перевір, що встановлено -dev пакет, не тільки runtime" data-en="Linker can't see libcurl — check that the -dev package is installed, not just runtime">Лінкер не бачить libcurl — перевір, що встановлено -dev пакет, не тільки runtime</span></td>
+            </tr>
+            <tr>
+                <td><code>cmake: command not found</code></td>
+                <td><span data-uk="Використай ./run gcc замість ./run cmake, або встанови cmake" data-en="Use ./run gcc instead of ./run cmake, or install cmake">Використай ./run gcc замість ./run cmake, або встанови cmake</span></td>
+            </tr>
+        </table>
+        <h3 id="faq-gui">5.2. <span data-uk="GUI не запускається" data-en="GUI won't launch">GUI не запускається</span></h3>
+        <ul class="feature-list">
+            <li><span data-uk="Docker: перевір, що виконано " data-en="Docker: check that ">Docker: перевір, що виконано </span><code>xhost +local:docker</code><span data-uk=" на хості перед " data-en=" was run on host before ">  на хості перед </span><code>./run docker</code></li>
+            <li><span data-uk="Wayland: використай " data-en="Wayland: use ">Wayland: використай </span><code>./run docker_x11</code><span data-uk=" замість звичайного docker-запуску" data-en=" instead of the regular docker run">  замість звичайного docker-запуску</span></li>
+            <li><span data-uk="Перевір змінну " data-en="Check the ">Перевір змінну </span><code>$DISPLAY</code><span data-uk=" — вона має бути встановлена в терміналі, де запускаєш застосунок" data-en=" variable — it must be set in the terminal where you launch the app">  — вона має бути встановлена в терміналі, де запускаєш застосунок</span></li>
+        </ul>
+        <div class="note footer-content" style="justify-content: flex-start;">
+            <b><span data-uk="Не знайшов рішення?" data-en="Didn't find a fix>">Не знайшов рішення?</span></b>
+            <span data-uk=" відкрий issue на " data-en=" open an issue on "> відкрий issue на </span>
+            <a href="https://github.com/yorjjeartemitt/threat-intel/issues" target="_blank">GitHub Issues</a>
+        </div>
+    </section>
+</main>
+<footer>
+    <div class="footer-content">
+        <span>© 2026 Threat Intel</span>
+        <a href="https://github.com/yorjjeartemitt/threat-intel" target="_blank">GitHub</a>
+        <a href="https://github.com/yorjjeartemitt/threat-intel/issues" target="_blank">Issues</a>
+        <a href="https://github.com/yorjjeartemitt/threat-intel/blob/main/LICENSE" target="_blank">License</a>
+    </div>
+</footer>
+<script>
+function setLang(lang) {
+    document.querySelectorAll('[data-uk]').forEach(el => {
+        el.textContent = el.getAttribute('data-' + lang);
+    });
+    document.getElementById('btn-uk').classList.toggle('active', lang === 'uk');
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    document.documentElement.lang = lang;
+}
+</script>
+
+</body>
+</html>
