@@ -301,7 +301,8 @@
     <div class="section-title">5. <span data-uk="Часті проблеми (FAQ)" data-en="Troubleshooting (FAQ)">Часті проблеми (FAQ)</span></div>
         <ul>
             <li class="sub"><a href="#faq-build"><span data-uk="5.1. Помилки збірки" data-en="5.1. Build errors">5.1. Помилки збірки</span></a></li>
-            <li class="sub"><a href="#faq-gui"><span data-uk="5.3. GUI не запускається" data-en="5.3. GUI won't launch">5.2. GUI не запускається</span></a></li>
+            <li class="sub"><a href="#faq-gui"><span data-uk="5.2. GUI не запускається" data-en="5.2. GUI won't launch">5.2. GUI не запускається</span></a></li>
+            <li class="sub"><a href="#faq-binary"><span data-uk="5.3. Бінарне кодування і UTF-8" data-en="5.3. Binary encoding and UTF-8">5.3. Бінарне кодування і UTF-8</span></a></li>
         </ul>
 </nav>
 
@@ -562,6 +563,46 @@ mkdir -p build
             <b><span data-uk="Не знайшов рішення?" data-en="Didn't find a fix>">Не знайшов рішення?</span></b>
             <span data-uk=" відкрий issue на " data-en=" open an issue on "> відкрий issue на </span>
             <a href="https://github.com/yorjjeartemitt/threat-intel/issues" target="_blank">GitHub Issues</a>
+        </div>
+        <h3 id="faq-binary">5.3. <span data-uk="Бінарне кодування і UTF-8" data-en="Binary encode and UTF-8">Бінарне кодування і UTF-8</span>
+        <p><span data-uk="При переведенні тексту в бінарний формат кожен символ кодується рівно 8 бітами - це базова вимога ASCII/UTF-8. Якщо написати менше 8 цифр на кожен символ, застосунок не зможе коректно розбити рядок назад на байти." data-en="When converting text to binary, each character is encoded as exactly 8 bits — this is a basic ASCII/UTF-8 requirement. If you write fewer than 8 digits per character, the app can't correctly split the string back into bytes.">При переведенні тексту в бінарний формат кожен символ кодується рівно 8 бітами — це базова вимога ASCII/UTF-8. Якщо написати менше 8 цифр на символ, застосунок не зможе коректно розбити рядок назад на байти.</span></p>
+        <table>
+            <tr>
+                <th><span data-uk="Символ" data-en="Character">Символ</span></th>
+                <th><span data-uk="Правильно (8 біт)" data-en="Correct (8 bits)">Правильно (8 біт)</span></th>
+                <th><span data-uk="Неправильно" data-en="Wrong">Неправильно</span></th>
+            </tr>
+            <tr>
+                <td><code>H</code></td>
+                <td><code>01001000</code></td>
+                <td><code>1001000</code><span data-uk="(7 біт - зламає decode" data-en="(7 bits - breaks decode">(7 біт - зламає decode)</span></td>
+            </tr> 
+            <tr>
+                <td><code>i</code></td>
+                <td><code>01101001</code></td>
+                <td><code>1101001</code> <span data-uk="(пропущений ведучий 0)" data-en="(missing leading 0)">(пропущений ведучий 0)</span></td>
+            </tr>
+        </table>
+        <div class="note">
+            <b><span data-uk="Як вводити бінарний рядок" data-en="How to enter binary input">Як вводити бінарний рядок</span>:</b>
+            <span data-uk=" групи з 8 цифр розділяй пробілом. Наприклад, щоб отримати " data-en=" separate groups of 8 digits with a space. For example, to get ">
+                групи з 8 цифр розділяй пробілом. Наприклад, щоб отримати
+            </span>
+            <code>Hi</code>
+            <span data-uk=" — введи:" data-en=" — enter:"> — введи:</span>
+            <pre style="margin-top:8px"><code>01001000 01101001</code></pre>
+            <span data-uk="Кожні 8 біт = 1 байт = 1 ASCII-символ. UTF-8 для латиниці і цифр повністю збігається з ASCII, тому правило однакове."
+                  data-en="Every 8 bits = 1 byte = 1 ASCII character. UTF-8 for Latin characters and digits is identical to ASCII, so the rule is the same.">
+                Кожні 8 біт = 1 байт = 1 ASCII-символ. UTF-8 для латиниці і цифр повністю збігається з ASCII, тому правило однакове.
+            </span>
+        </div>
+
+        <div class="warn">
+            <b><span data-uk="Кирилиця в бінарному режимі" data-en="Cyrillic in binary mode">Кирилиця в бінарному режимі</span>:</b>
+            <span data-uk=" UTF-8 кодує кириличні символи двома байтами, тобто 16 бітами на символ. Інструмент працює з ASCII — не вводь кирилицю в бінарному режимі, результат буде некоректним."
+                  data-en=" UTF-8 encodes Cyrillic characters as two bytes, i.e. 16 bits per character. The tool works with ASCII — don't enter Cyrillic in binary mode, the result will be incorrect.">
+                UTF-8 кодує кириличні символи двома байтами, тобто 16 бітами на символ. Інструмент працює з ASCII — не вводь кирилицю в бінарному режимі, результат буде некоректним.
+            </span>
         </div>
     </section>
 </main>
